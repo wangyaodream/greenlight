@@ -1,0 +1,6 @@
+tmp
+.env
+test.*
+
+bin
+.DS_Store
