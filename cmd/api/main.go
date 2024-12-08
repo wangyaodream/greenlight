@@ -38,7 +38,6 @@ func main() {
 		logger: logger,
 	}
 
-
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", app.config.port),
 		Handler:      app.routes(),
