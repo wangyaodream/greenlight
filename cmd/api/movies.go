@@ -6,19 +6,36 @@ import (
 	"time"
 
 	"github.com/wangyaodream/greenlight/internal/data"
+	"github.com/wangyaodream/greenlight/internal/validator"
 )
 
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title   string   `json:"title"`
-		Year    int32    `json:"year"`
-		Runtime int32    `json:"runtime"`
-		Genres  []string `json:"genres"`
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"` // 自定义类型
+		Genres  []string     `json:"genres"`
 	}
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
-        app.badRequestResponse(w, r, err)
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// 这里使用Movie结构体的目的是只针对需要的字段进行验证，input结构体中有可能包含其他字段
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+
+	v := validator.New()
+
+	// 验证
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
