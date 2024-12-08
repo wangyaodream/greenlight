@@ -31,3 +31,7 @@ func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.
 	message := "the requested HTTP method is not supported by this resource"
 	app.errorResponse(w, r, http.StatusMethodNotAllowed, message)
 }
+
+func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
+    app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+}
