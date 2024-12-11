@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/wangyaodream/greenlight/internal/data"
 	"github.com/wangyaodream/greenlight/internal/validator"
@@ -64,19 +64,21 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	movie := data.Movie{
-		ID:        id,
-		Title:     "Casablanca",
-		CreatedAt: time.Now(),
-		Year:      1942,
-		Runtime:   102,
-		Genres:    []string{"Drama", "Romance", "War"},
-		Version:   1,
-	}
-
-	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-
+    // 获取id对应的movie
+    movie, err := app.models.Movies.Get(id)
+    if err != nil {
+        switch {
+        case errors.Is(err, data.ErrRecordNotFound):
+            app.notFoundResponse(w, r)
+        default:
+            app.serverErrorResponse(w, r, err)
+        }
+        return
+    }
+    
+    // 返回movie
+    err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+    if err != nil {
+        app.serverErrorResponse(w, r, err)
+    }
 }
