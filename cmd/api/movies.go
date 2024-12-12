@@ -102,10 +102,11 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+    // 使用指针类型的结构体，可以判断是否传入了对应的字段，如果没有传入，则不更新
 	var input struct {
-		Title   string       `json:"title"`
-		Year    int32        `json:"year"`
-		Runtime data.Runtime `json:"runtime"`
+		Title   *string       `json:"title"`
+		Year    *int32        `json:"year"`
+		Runtime *data.Runtime `json:"runtime"`
 		Genres  []string     `json:"genres"`
 	}
 
@@ -115,10 +116,21 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	movie.Title = input.Title
-	movie.Year = input.Year
-	movie.Runtime = input.Runtime
-	movie.Genres = input.Genres
+    if input.Title != nil {
+        movie.Title = *input.Title
+    }
+
+    if input.Year != nil {
+        movie.Year = *input.Year
+    }
+
+    if input.Runtime != nil {
+        movie.Runtime = *input.Runtime
+    }
+
+    if input.Genres != nil {
+        movie.Genres = input.Genres
+    }
 
 	// 验证
 	v := validator.New()
