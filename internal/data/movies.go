@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -40,12 +41,18 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 	}
 
 	query := `
-        SELECT id, created_at, title, year, runtime, genres, version
+        SELECT pg_sleep(10), id, created_at, title, year, runtime, genres, version
         FROM movies
         WHERE id = $1
     `
 	var movie Movie
-	err := m.DB.QueryRow(query, id).Scan(
+
+	// 使用context.WithTimeout()函数设置超时时间
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&[]byte{}, // Discard the pg_sleep(10) result from the query.
 		&movie.ID,
 		&movie.CreatedAt,
 		&movie.Title,
@@ -77,17 +84,17 @@ func (m MovieModel) Update(movie *Movie) error {
 
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.ID, movie.Version}
 
-    err := m.DB.QueryRow(query, args...).Scan(&movie.Version)
-    if err != nil {
-        switch {
-        case errors.Is(err, sql.ErrNoRows):
-            return ErrEditConflict
-        default:
-            return err
-        }
-    }
+	err := m.DB.QueryRow(query, args...).Scan(&movie.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
 
-    return nil
+	return nil
 
 }
 
