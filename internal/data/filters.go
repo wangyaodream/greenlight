@@ -2,14 +2,14 @@ package data
 
 import "github.com/wangyaodream/greenlight/internal/validator"
 
-type Filter struct {
+type Filters struct {
 	Page     int
 	PageSize int
 	Sort     string
     SortSafelist []string
 }
 
-func ValidateFilters(v *validator.Validator, f Filter) {
+func ValidateFilters(v *validator.Validator, f Filters) {
     // 检查page和PageSize字段是否有效
     v.Check(f.Page > 0, "page", "must be greater than zero")
     v.Check(f.Page <= 10_000, "page", "must be a maximum of 10,000")

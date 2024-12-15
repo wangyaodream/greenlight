@@ -188,7 +188,7 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
     var input struct {
         Title string
         Genres []string
-        data.Filter
+        data.Filters
     }
 
     // 创建一个新的验证器
@@ -200,19 +200,27 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
     input.Title = app.readString(qs, "title", "")
     input.Genres = app.readCSV(qs, "genres", []string{})
 
-    input.Filter.Page = app.readInt(qs, "page", 1, v)
-    input.Filter.PageSize = app.readInt(qs, "page_size", 20, v)
+    input.Filters.Page = app.readInt(qs, "page", 1, v)
+    input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
-    input.Filter.Sort = app.readString(qs, "sort", "id")
+    input.Filters.Sort = app.readString(qs, "sort", "id")
     // 指定排序字段,减号字段表示降序
-    input.Filter.SortSafelist = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+    input.Filters.SortSafelist = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
 
     // 如果有错误，返回错误信息
-    if data.ValidateFilters(v, input.Filter); !v.Valid() {
+    if data.ValidateFilters(v, input.Filters); !v.Valid() {
         app.failedValidationResponse(w, r, v.Errors)
         return
     }
 
-    fmt.Fprintf(w, "%v\n", input)
+    movies, err := app.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
+    if err != nil {
+        app.serverErrorResponse(w, r, err)
+        return
+    }
 
+    err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+    if err != nil {
+        app.serverErrorResponse(w, r, err)
+    } 
 }
