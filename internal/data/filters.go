@@ -1,6 +1,10 @@
 package data
 
-import "github.com/wangyaodream/greenlight/internal/validator"
+import (
+	"strings"
+
+	"github.com/wangyaodream/greenlight/internal/validator"
+)
 
 type Filters struct {
 	Page     int
@@ -19,4 +23,22 @@ func ValidateFilters(v *validator.Validator, f Filters) {
     v.Check(validator.PermiteedValue(f.Sort, f.SortSafelist...), "sort", "invalid sort value")
 }
 
+func (f Filters) sortColumn() string {
+    for _, safeValue := range f.SortSafelist {
+        if f.Sort == safeValue {
+            // 去掉排序字段前面的负号
+            return strings.TrimPrefix(f.Sort, "-")
+        }
+    }
+
+    panic("unsafe sort parameter: " + f.Sort)
+}
+
+func (f Filters) sortDirection() string {
+    if strings.HasPrefix(f.Sort, "-") {
+        return "DESC"
+    }
+
+    return "ASC"
+}
 
