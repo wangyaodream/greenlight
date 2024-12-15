@@ -188,9 +188,7 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
     var input struct {
         Title string
         Genres []string
-        Page int
-        PageSize int
-        Sort string
+        data.Filter
     }
 
     // 创建一个新的验证器
@@ -201,12 +199,16 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 
     input.Title = app.readString(qs, "title", "")
     input.Genres = app.readCSV(qs, "genres", []string{})
-    input.Page = app.readInt(qs, "page", 1, v)
-    input.PageSize = app.readInt(qs, "page_size", 20, v)
-    input.Sort = app.readString(qs, "sort", "id")
+
+    input.Filter.Page = app.readInt(qs, "page", 1, v)
+    input.Filter.PageSize = app.readInt(qs, "page_size", 20, v)
+
+    input.Filter.Sort = app.readString(qs, "sort", "id")
+    // 指定排序字段,减号字段表示降序
+    input.Filter.SortSafelist = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
 
     // 如果有错误，返回错误信息
-    if !v.Valid() {
+    if data.ValidateFilters(v, input.Filter); !v.Valid() {
         app.failedValidationResponse(w, r, v.Errors)
         return
     }
