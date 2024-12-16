@@ -13,6 +13,14 @@ type Filters struct {
     SortSafelist []string
 }
 
+type Metadata struct {
+    CurrentPage int `json:"current_page,omitempty"`
+    PageSize int `json:"page_size,omitempty"`
+    FirstPage int `json:"first_page,omitempty"`
+    LastPage int `json:"last_page,omitempty"`
+    TotalRecords int `json:"total_records,omitempty"`
+}
+
 func ValidateFilters(v *validator.Validator, f Filters) {
     // 检查page和PageSize字段是否有效
     v.Check(f.Page > 0, "page", "must be greater than zero")
@@ -42,3 +50,11 @@ func (f Filters) sortDirection() string {
     return "ASC"
 }
 
+
+func (f Filters) limit() int {
+    return f.PageSize
+}
+
+func (f Filters) Offset() int {
+    return (f.Page - 1) * f.PageSize
+}
