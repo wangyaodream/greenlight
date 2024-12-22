@@ -34,6 +34,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 		clients = make(map[string]*client)
 	)
 
+	// 利用一个后台的 goroutine 定期清理过期的客户端
 	go func() {
 		for {
 			time.Sleep(time.Minute)
@@ -41,6 +42,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 			mu.Lock()
 
 			for ip, client := range clients {
+				// 如果客户端在过去的 3 分钟内没有被看到过，那么就将它从map中删除
 				if time.Since(client.lastSeen) > 3*time.Minute {
 					delete(clients, ip)
 				}
@@ -62,6 +64,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 			clients[ip] = &client{limiter: rate.NewLimiter(2, 4)}
 		}
 
+		// 记录客户端的最后访问时间
 		clients[ip].lastSeen = time.Now()
 
 		if !clients[ip].limiter.Allow() {
