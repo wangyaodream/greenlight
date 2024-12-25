@@ -52,6 +52,7 @@ func (app *application) serve() error {
 		return err
 	}
 
+	// 等待shutdownError channel返回错误
 	err = <-shutdownError
 	if err != nil {
 		return err
