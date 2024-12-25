@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
-	"net/http"
 	"os"
 	"time"
 
@@ -78,10 +76,10 @@ func main() {
 		models: data.NewModels(db),
 	}
 
-    err = app.serve()
-    if err != nil {
-        logger.PrintFatal(err, nil)
-    }
+	err = app.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
 
 }
 
