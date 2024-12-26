@@ -7,6 +7,12 @@ migrate create -ext sql -dir db/migrations -seq init_schema
 # -seq 生成有序的迁移文件类似于0001、0002
 # -ext 生成的文件后缀
 ```
+同样可以使用`migrate`命令来让数据库迁移
+```shell
+# 迁移数据库
+migrate -path=./migrations -database=$GREENLIGHT_DB_DSN up
+```
+
 
 ### 结构解释
 
