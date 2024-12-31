@@ -10,6 +10,7 @@ import (
 )
 
 
+//go:embed "templates"
 var templateFS embed.FS
 
 type Mailer struct {
@@ -59,6 +60,7 @@ func (m Mailer) Send(recipient, templateFile string, data any) error {
     msg.SetBody("text/plain", plainBody.String())
     msg.AddAlternative("text/html", htmlBody.String())
 
+    // 发送邮件到SMTP服务器
     err = m.dialer.DialAndSend(msg)
     if err != nil {
         return err
