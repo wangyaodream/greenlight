@@ -138,3 +138,17 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 
     return i
 }
+
+func (app *application) background(fn func()) {
+    go func() {
+        defer func() {
+            if err := recover(); err != nil {
+                // 在这里记录错误信息
+                app.logger.PrintError(fmt.Errorf("%s", err), nil)
+            }
+        }()
+
+        // 调用传入的函数
+        fn()
+    }()
+}
