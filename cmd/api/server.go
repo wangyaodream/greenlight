@@ -39,6 +39,18 @@ func (app *application) serve() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
+
+        err := srv.Shutdown(ctx)
+        if err != nil {
+            shutdownError <- err
+        }
+
+        // 发送log信息说明正在等待后台任务完成
+        app.logger.PrintInfo("completing background tasks", map[string]string{
+            "addr": srv.Addr,
+        })
+        app.wg.Wait()
+
 		shutdownError <- srv.Shutdown(ctx)
 	}()
 
