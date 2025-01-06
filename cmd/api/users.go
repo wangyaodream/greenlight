@@ -80,3 +80,29 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 }
+
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+    // 通过请求获取token
+    var input struct {
+        TokenPlaintext string `json:"token"`
+    }
+
+    err := app.readJSON(w, r, &input)
+    if err != nil {
+        app.badRequestResponse(w, r, err)
+        return
+    }
+
+    // 创建验证器对象
+    v := validator.New()
+
+    if data.ValidateTokenPlaintext(v, input.TokenPlaintext); !v.Valid() {
+        app.failedValidationResponse(w, r, v.Errors)
+        return
+    }
+
+    // TODO 需要实现GetForToken方法
+    user, err := app.models.Users.GetForToken(data.ScopeActivation, input.TokenPlaintext)
+
+
+}
