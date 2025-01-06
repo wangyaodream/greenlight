@@ -35,11 +35,13 @@ func (m Mailer) Send(recipient, templateFile string, data any) error {
     }
 
     subject := new(bytes.Buffer)
+    // 渲染模板并将结果写入到subject缓冲区
     err = tmpl.ExecuteTemplate(subject, "subject", data)
     if err != nil {
         return err
     }
 
+    // 渲染模板并将结果写入到plainBody缓冲区
     plainBody := new(bytes.Buffer)
     err = tmpl.ExecuteTemplate(plainBody, "htmlBody", data)
     if err != nil {
