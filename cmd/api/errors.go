@@ -3,10 +3,10 @@ package main
 import "net/http"
 
 func (app *application) logError(r *http.Request, err error) {
-    app.logger.PrintError(err, map[string]string{
-        "request_method": r.Method,
-        "request_url": r.URL.String(),
-    })
+	app.logger.PrintError(err, map[string]string{
+		"request_method": r.Method,
+		"request_url":    r.URL.String(),
+	})
 }
 
 func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message any) {
@@ -44,11 +44,16 @@ func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.
 }
 
 func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
-    message := "ubable to update the record due to an edit conflict, please try again"
-    app.errorResponse(w, r, http.StatusConflict, message)
+	message := "ubable to update the record due to an edit conflict, please try again"
+	app.errorResponse(w, r, http.StatusConflict, message)
 }
 
 func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
-    message := "rate limit exceeded"
-    app.errorResponse(w, r, http.StatusTooManyRequests, message)
+	message := "rate limit exceeded"
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
+}
+
+func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid authentication credentials"
+	app.errorResponse(w, r, http.StatusUnauthorized, message)
 }
