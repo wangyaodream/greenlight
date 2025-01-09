@@ -78,3 +78,9 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // 从请求头中提取 Authorization 头
+        w.Header().Add("Vary", "Authorization")
+}
