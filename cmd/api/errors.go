@@ -62,5 +62,5 @@ func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter
     w.Header().Set("WWW-Authenticate", "Bearer")
 
     message := "invalid or missing authentication token"
-    app.errorResponse(w, r, http.StatusForbidden, message)
+    app.errorResponse(w, r, http.StatusUnauthorized, message)
 }
