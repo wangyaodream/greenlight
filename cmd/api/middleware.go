@@ -125,3 +125,23 @@ func (app *application) authenticate(next http.Handler) http.Handler {
         next.ServeHTTP(w, r)
     })
 }
+
+func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+    // 这个中间件函数接受一个 http.HandlerFunc 作为参数，然后返回一个新的 http.HandlerFunc
+    // 这样可以包装/v1/movie**路由处理函数
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        user := app.contextGetUser(r)
+
+        if user.IsAnonymous() {
+            app.authenticationRequireResponse(w, r)
+            return
+        }
+
+        if !user.Activated {
+            app.inactiveAccountResponse(w, r)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
