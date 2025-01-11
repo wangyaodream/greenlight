@@ -84,64 +84,93 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 }
 
 func (app *application) authenticate(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // 从请求头中提取 Authorization 头
-        w.Header().Add("Vary", "Authorization")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 从请求头中提取 Authorization 头
+		w.Header().Add("Vary", "Authorization")
 
-        authorizationHeader := r.Header.Get("Authorization")
+		authorizationHeader := r.Header.Get("Authorization")
 
-        if authorizationHeader == "" {
-            r = app.contextSetUser(r, data.AnonymousUser)
-            next.ServeHTTP(w, r)
-            return
-        }
+		if authorizationHeader == "" {
+			r = app.contextSetUser(r, data.AnonymousUser)
+			next.ServeHTTP(w, r)
+			return
+		}
 
-        headerParts := strings.Split(authorizationHeader, " ")
-        if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-            app.invalidAuthenticationTokenResponse(w, r)
-            return
-        }
+		headerParts := strings.Split(authorizationHeader, " ")
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
 
-        token := headerParts[1]
-        v := validator.New()
+		token := headerParts[1]
+		v := validator.New()
 
-        if data.ValidateTokenPlaintext(v, token); !v.Valid() {
-            app.invalidAuthenticationTokenResponse(w, r)
-            return
-        }
+		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
 
-        user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
-        if err != nil {
-            switch {
-            case errors.Is(err, data.ErrRecordNotFound):
-                app.invalidAuthenticationTokenResponse(w, r)
-            default:
-                app.serverErrorResponse(w, r, err)
-            }
-            return
-        }
+		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
 
-        r = app.contextSetUser(r, user)
-        next.ServeHTTP(w, r)
-    })
+		r = app.contextSetUser(r, user)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+// 	// 这个中间件函数接受一个 http.HandlerFunc 作为参数，然后返回一个新的 http.HandlerFunc
+// 	// 这样可以包装/v1/movie**路由处理函数
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		user := app.contextGetUser(r)
+
+// 		if user.IsAnonymous() {
+// 			app.authenticationRequireResponse(w, r)
+// 			return
+// 		}
+
+// 		if !user.Activated {
+// 			app.inactiveAccountResponse(w, r)
+// 			return
+// 		}
+
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
+
+// 将requireActivatedUser中间件分离成验证用户和激活用户两个中间件
+func (app *application) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			app.authenticationRequireResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
-    // 这个中间件函数接受一个 http.HandlerFunc 作为参数，然后返回一个新的 http.HandlerFunc
-    // 这样可以包装/v1/movie**路由处理函数
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        user := app.contextGetUser(r)
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
 
-        if user.IsAnonymous() {
-            app.authenticationRequireResponse(w, r)
-            return
-        }
+		if !user.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
 
-        if !user.Activated {
-            app.inactiveAccountResponse(w, r)
-            return
-        }
+		next.ServeHTTP(w, r)
+	})
 
-        next.ServeHTTP(w, r)
-    })
+	return app.requireAuthenticatedUser(fn)
 }
