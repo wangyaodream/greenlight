@@ -106,16 +106,20 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		v := validator.New()
 
 		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+			// 如果token不是26个字符长，则返回一个400 Bad Request响应
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
+		// 通过token检索用户
 		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
+				// 如果token无效，则返回一个401 Unauthorized响应
 				app.invalidAuthenticationTokenResponse(w, r)
 			default:
+				// 如果在检索用户时发生其他错误，则返回一个500 Internal Server Error响应
 				app.serverErrorResponse(w, r, err)
 			}
 			return
@@ -152,6 +156,7 @@ func (app *application) requireAuthenticatedUser(next http.HandlerFunc) http.Han
 		user := app.contextGetUser(r)
 
 		if user.IsAnonymous() {
+			// 如果用户未通过身份验证，则返回一个 401 Unauthorized 响应
 			app.authenticationRequireResponse(w, r)
 			return
 		}
@@ -165,6 +170,7 @@ func (app *application) requireActivatedUser(next http.HandlerFunc) http.Handler
 		user := app.contextGetUser(r)
 
 		if !user.Activated {
+			// 如果用户未激活，则返回一个 403 Forbidden 响应
 			app.inactiveAccountResponse(w, r)
 			return
 		}
