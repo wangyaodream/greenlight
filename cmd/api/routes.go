@@ -30,6 +30,7 @@ func (app *application) routes() http.Handler {
 	// create authentication token
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
-	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
+    // 添加enbaleCORS中间件
+	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))
 
 }
