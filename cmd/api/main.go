@@ -6,6 +6,7 @@ import (
 	"expvar"
 	"flag"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -102,6 +103,20 @@ func main() {
 
     // 创建一个version expvar handler
     expvar.NewString("version").Set(version)
+
+    expvar.Publish("database", expvar.Func(func() any {
+        return db.Stats()
+    }))
+
+    // 创建一个goroutines expvar handler
+    expvar.Publish("goroutines", expvar.Func(func() any {
+        return runtime.NumGoroutine()
+    }))
+
+    // 创建一个timestamp expvar handler
+    expvar.Publish("timestamp", expvar.Func(func() any {
+        return time.Now().Unix()
+    }))
 
 	// 实例化一个新的application
 	app := &application{
