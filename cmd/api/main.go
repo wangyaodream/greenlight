@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"expvar"
 	"flag"
 	"os"
 	"strings"
@@ -98,6 +99,9 @@ func main() {
 	defer db.Close()
 
 	logger.PrintInfo("database connection pool established", nil)
+
+    // 创建一个version expvar handler
+    expvar.NewString("version").Set(version)
 
 	// 实例化一个新的application
 	app := &application{
